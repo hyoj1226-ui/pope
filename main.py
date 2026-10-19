@@ -5,7 +5,7 @@ import plotly.express as px
 import requests
 import streamlit as st
 
-# 페이지 설정을 넓은 화면(wide) 모드로 지정
+# [중요] 다른 모든 st.* 명령어보다 항상 맨 먼저 호출되어야 합니다.
 st.set_page_config(
     page_title="2026년 전국 고령화 단계구분도", page_layout="wide"
 )
@@ -30,7 +30,6 @@ def load_data():
     total_cols = [c for c in df_2026.columns if c.startswith("계_")]
 
     # '계_65세'부터 '계_100세 이상'까지의 열 식별
-    # 나이 숫자를 추출하여 65세 이상만 필터링
     old_cols = []
     for c in total_cols:
         age_str = c.replace("계_", "").replace("세 이상", "").replace("세", "")
@@ -79,23 +78,21 @@ fig = px.choropleth(
 )
 
 # GeoJSON의 '시군구' 속성을 hovertext로 지정
+df_sigungu["hover_text"] = ""
 for feature in sigungu_geojson["features"]:
     code = feature["properties"]["코드"]
     name = feature["properties"]["시군구"]
     sido = feature["properties"]["시도"]
 
-    # 해당 코드의 행을 찾아 hovertext 업데이트
     mask = df_sigungu["sigungu_code"] == code
     if mask.any():
         rate = df_sigungu.loc[mask, "고령화율"].values[0]
         df_sigungu.loc[mask, "hover_text"] = f"{sido} {name}<br>고령화율: {rate:.2f}%"
 
-# hovertemplate 설정 (시군구 이름과 고령화율 표시)
 fig.update_traces(
     hovertext=df_sigungu["hover_text"], hovertemplate="%{hovertext}<extra></extra>"
 )
 
-# 지도 배경/타일 제거 및 투명 레이아웃 적용
 fig.update_geos(fitbounds="locations", visible=False)
 
 fig.update_layout(
