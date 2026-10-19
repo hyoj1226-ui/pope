@@ -5,10 +5,8 @@ import plotly.express as px
 import requests
 import streamlit as st
 
-# [핵심] 다른 모든 st.* 함수(st.title, st.write 등)보다 무조건 가장 먼저 실행되어야 합니다!
-st.set_page_config(
-    page_title="2026년 전국 고령화 단계구분도", page_layout="wide"
-)
+# [수정] positional argument로 전달하여 TypeError 방지
+st.set_page_config("2026년 전국 고령화 단계구분도", layout="wide")
 
 st.title("2026년 전국 시군구별 고령화율 단계구분도")
 
@@ -65,19 +63,7 @@ def load_data():
 # 데이터 불러오기
 df_sigungu, sigungu_geojson = load_data()
 
-# Plotly Choropleth (단계구분도) 생성
-fig = px.choropleth(
-    df_sigungu,
-    geojson=sigungu_geojson,
-    locations="sigungu_code",
-    featureidkey="properties.코드",
-    color="고령화율",
-    color_continuous_scale="Reds",
-    hover_data={"sigungu_code": False, "고령화율": ":.2f%"},
-    labels={"고령화율": "고령화율 (%)"},
-)
-
-# GeoJSON의 '시군구' 속성을 hovertext로 지정
+# hover_text 사전 생성
 df_sigungu["hover_text"] = ""
 for feature in sigungu_geojson["features"]:
     code = feature["properties"]["코드"]
@@ -89,8 +75,20 @@ for feature in sigungu_geojson["features"]:
         rate = df_sigungu.loc[mask, "고령화율"].values[0]
         df_sigungu.loc[mask, "hover_text"] = f"{sido} {name}<br>고령화율: {rate:.2f}%"
 
+# Plotly Choropleth (단계구분도) 생성
+fig = px.choropleth(
+    df_sigungu,
+    geojson=sigungu_geojson,
+    locations="sigungu_code",
+    featureidkey="properties.코드",
+    color="고령화율",
+    color_continuous_scale="Reds",
+    labels={"고령화율": "고령화율 (%)"},
+)
+
 fig.update_traces(
-    hovertext=df_sigungu["hover_text"], hovertemplate="%{hovertext}<extra></extra>"
+    hovertext=df_sigungu["hover_text"],
+    hovertemplate="%{hovertext}<extra></extra>"
 )
 
 fig.update_geos(fitbounds="locations", visible=False)
