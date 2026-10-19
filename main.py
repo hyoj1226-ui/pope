@@ -5,7 +5,7 @@ import plotly.express as px
 import requests
 import streamlit as st
 
-# [중요] 다른 모든 st.* 명령어보다 항상 맨 먼저 호출되어야 합니다.
+# [중요] 모든 st.* 명령어 중 가장 먼저 실행되어야 합니다.
 st.set_page_config(
     page_title="2026년 전국 고령화 단계구분도", page_layout="wide"
 )
